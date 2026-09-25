@@ -1,6 +1,18 @@
-import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
+
+import { Link } from "expo-router";
+
+import { usePokemonList } from "../app/hooks/usePokemonList";
 
 export default function HomeScreen() {
+  const { pokemon, loading, error } =
+    usePokemonList();
 
   const { width } = useWindowDimensions();
 
@@ -11,19 +23,55 @@ export default function HomeScreen() {
       ? 2
       : 1;
 
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text>Cargando Pokémon...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text>{error}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
         Pokedex Lite
       </Text>
 
-      <Text>
-        Ancho: {width}
-      </Text>
-
-      <Text>
-        Columnas: {columns}
-      </Text>
+      <FlatList
+        data={pokemon}
+        key={columns}
+        numColumns={columns}
+        keyExtractor={(item) => item.name}
+        contentContainerStyle={styles.list}
+        columnWrapperStyle={
+          columns > 1
+            ? styles.columnWrapper
+            : undefined
+        }
+        renderItem={({ item }) => (
+          <Link
+            href={{
+              pathname: "/pokemon/:name",
+              params: {
+                name: item.name,
+              },
+            }}
+            style={styles.card}
+          >
+            <Text style={styles.name}>
+              {item.name}
+            </Text>
+          </Link>
+        )}
+      />
     </View>
   );
 }
@@ -31,12 +79,40 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
+  },
+
+  center: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
 
   title: {
     fontSize: 30,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+
+  list: {
+    gap: 12,
+  },
+
+  columnWrapper: {
+    gap: 12,
+  },
+
+  card: {
+    flex: 1,
+    padding: 20,
+    borderWidth: 1,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+
+  name: {
+    fontSize: 18,
+    textTransform: "capitalize",
     fontWeight: "bold",
   },
 });
